@@ -231,6 +231,11 @@ p {
   line-height: 1.35;
 }
 
+.idea-card-node .empty-card-title,
+.idea-card-node .empty-card-copy {
+  color: #9aa29e;
+}
+
 .idea-card-node p {
   display: -webkit-box;
   margin-bottom: 14px;

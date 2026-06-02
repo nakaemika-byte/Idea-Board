@@ -63,58 +63,17 @@ const STORAGE_KEY = "milanote-style-idea-board:v1";
 
 const initialIdeas: Idea[] = [
   {
-    id: "idea-center",
-    title: "小さな発想を育てるアイデア帳",
-    body: "思いついた断片をカードに残し、あとから線でつないで企画の種にする。",
-    tags: ["プロダクト", "MVP"],
+    id: "idea-blank",
+    title: "",
+    body: "",
+    tags: [],
     createdAt: "2026-06-02T03:00:00.000Z",
     x: 120,
     y: 120,
   },
-  {
-    id: "idea-capture",
-    title: "3秒で追加できるクイックメモ",
-    body: "タイトルだけでも保存できる。本文やタグは後から整える。",
-    tags: ["入力", "UX"],
-    createdAt: "2026-06-02T03:04:00.000Z",
-    x: -220,
-    y: 20,
-  },
-  {
-    id: "idea-link",
-    title: "関連するアイデアを線でつなぐ",
-    body: "似たテーマや発展案を視覚的に残して、考えの流れを見失わない。",
-    tags: ["整理", "連想"],
-    createdAt: "2026-06-02T03:08:00.000Z",
-    x: 470,
-    y: 40,
-  },
-  {
-    id: "idea-mood",
-    title: "気分で眺められる軽いボード",
-    body: "きっちり分類する前の、まだ柔らかい発想を受け止める画面にする。",
-    tags: ["雰囲気", "ボード"],
-    createdAt: "2026-06-02T03:12:00.000Z",
-    x: -80,
-    y: 360,
-  },
-  {
-    id: "idea-tags",
-    title: "タグから再発見する",
-    body: "検索とタグで、昔の断片を今の課題にもう一度接続できるようにする。",
-    tags: ["検索", "タグ"],
-    createdAt: "2026-06-02T03:18:00.000Z",
-    x: 390,
-    y: 340,
-  },
 ];
 
-const initialLinks: IdeaLink[] = [
-  { id: "link-center-capture", source: "idea-center", target: "idea-capture" },
-  { id: "link-center-link", source: "idea-center", target: "idea-link" },
-  { id: "link-center-mood", source: "idea-center", target: "idea-mood" },
-  { id: "link-link-tags", source: "idea-link", target: "idea-tags" },
-];
+const initialLinks: IdeaLink[] = [];
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("ja-JP", {
@@ -171,13 +130,15 @@ function IdeaCardNode({ data }: NodeProps<Node<IdeaNodeData>>) {
         <span>{formatDate(idea.createdAt)}</span>
         <Sparkles aria-hidden="true" size={14} />
       </div>
-      <h2>{idea.title}</h2>
-      <p>{idea.body}</p>
-      <div className="node-tags">
-        {idea.tags.map((tag) => (
-          <span key={tag}>{tag}</span>
-        ))}
-      </div>
+      <h2 className={!idea.title ? "empty-card-title" : ""}>{idea.title || "新しいアイデア"}</h2>
+      <p className={!idea.body ? "empty-card-copy" : ""}>{idea.body || "メモを入力してください"}</p>
+      {idea.tags.length ? (
+        <div className="node-tags">
+          {idea.tags.map((tag) => (
+            <span key={tag}>{tag}</span>
+          ))}
+        </div>
+      ) : null}
       <Handle type="source" position={Position.Right} className="node-handle" />
     </div>
   );
