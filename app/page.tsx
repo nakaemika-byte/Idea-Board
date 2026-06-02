@@ -24,11 +24,13 @@ import {
   CornerDownRight,
   Link2Off,
   PanelRightClose,
+  Plus,
   RefreshCw,
   Search,
   Sparkles,
   Tags,
   Trash2,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -85,18 +87,6 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function toTagInput(tags: string[]) {
-  return tags.join(", ");
-}
-
-function fromTagInput(value: string) {
-  return value
-    .split(",")
-    .map((tag) => tag.trim())
-    .filter(Boolean)
-    .slice(0, 6);
-}
-
 function createIdea(index: number): Idea {
   const now = new Date();
 
@@ -117,6 +107,7 @@ function createLinkId(source: string, target: string) {
 
 function IdeaCardNode({ data }: NodeProps<Node<IdeaNodeData>>) {
   const { idea, selected, highlighted } = data;
+  const visibleTags = idea.tags.map((tag) => tag.trim()).filter(Boolean);
 
   return (
     <div
@@ -133,10 +124,10 @@ function IdeaCardNode({ data }: NodeProps<Node<IdeaNodeData>>) {
       </div>
       <h2 className={!idea.title ? "empty-card-title" : ""}>{idea.title || "新しいアイデア"}</h2>
       <p className={!idea.body ? "empty-card-copy" : ""}>{idea.body || "メモを入力してください"}</p>
-      {idea.tags.length ? (
+      {visibleTags.length ? (
         <div className="node-tags">
-          {idea.tags.map((tag) => (
-            <span key={tag}>{tag}</span>
+          {visibleTags.map((tag, index) => (
+            <span key={`${tag}-${index}`}>{tag}</span>
           ))}
         </div>
       ) : null}
@@ -278,6 +269,33 @@ function IdeaBoard() {
     setIdeas((currentIdeas) =>
       currentIdeas.map((idea) => (idea.id === selectedIdeaId ? { ...idea, ...patch } : idea)),
     );
+  };
+
+  const updateTagAt = (index: number, value: string) => {
+    if (!selectedIdea) {
+      return;
+    }
+
+    const nextTags = selectedIdea.tags.length ? [...selectedIdea.tags] : [""];
+    nextTags[index] = value;
+    updateSelectedIdea({ tags: nextTags.slice(0, 6) });
+  };
+
+  const addTagField = () => {
+    if (!selectedIdea || selectedIdea.tags.length >= 6) {
+      return;
+    }
+
+    const currentTags = selectedIdea.tags.length ? selectedIdea.tags : [""];
+    updateSelectedIdea({ tags: [...currentTags, ""].slice(0, 6) });
+  };
+
+  const removeTagAt = (index: number) => {
+    if (!selectedIdea) {
+      return;
+    }
+
+    updateSelectedIdea({ tags: selectedIdea.tags.filter((_, tagIndex) => tagIndex !== index) });
   };
 
   const connectIdeas = useCallback((connection: Connection) => {
@@ -514,17 +532,43 @@ function IdeaBoard() {
               />
             </label>
 
-            <label className="field">
+            <div className="field">
               <span>
                 <Tags aria-hidden="true" size={15} />
                 タグ
               </span>
-              <input
-                value={toTagInput(selectedIdea.tags)}
-                onChange={(event) => updateSelectedIdea({ tags: fromTagInput(event.target.value) })}
-                placeholder="タグをカンマ区切りで入力"
-              />
-            </label>
+              <div className="tag-editor">
+                {(selectedIdea.tags.length ? selectedIdea.tags : [""]).map((tag, index) => (
+                  <div className="tag-input-row" key={`${selectedIdea.id}-tag-${index}`}>
+                    <input
+                      value={tag}
+                      onChange={(event) => updateTagAt(index, event.target.value)}
+                      placeholder="タグを入力"
+                    />
+                    {selectedIdea.tags.length ? (
+                      <button
+                        className="tag-remove-button"
+                        type="button"
+                        onClick={() => removeTagAt(index)}
+                        aria-label={`タグ${index + 1}を削除`}
+                        title="タグを削除"
+                      >
+                        <X aria-hidden="true" size={15} />
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+                <button
+                  className="tag-add-button"
+                  type="button"
+                  onClick={addTagField}
+                  disabled={selectedIdea.tags.length >= 6}
+                >
+                  <Plus aria-hidden="true" size={15} />
+                  タグを追加
+                </button>
+              </div>
+            </div>
 
             <section className="related-panel">
               <div className="related-title">
