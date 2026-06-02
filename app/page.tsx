@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import {
   AlignCenter,
+  AlertTriangle,
   Boxes,
   CirclePlus,
   CornerDownRight,
@@ -162,6 +163,8 @@ function IdeaBoard() {
   const [selectedIdeaId, setSelectedIdeaId] = useState(initialIdeas[0].id);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [resetSnapshot, setResetSnapshot] = useState<BoardState | null>(null);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
 
   useEffect(() => {
     const saved = window.localStorage.getItem(STORAGE_KEY);
@@ -325,10 +328,31 @@ function IdeaBoard() {
   };
 
   const resetBoard = () => {
+    setIsResetDialogOpen(true);
+  };
+
+  const confirmResetBoard = () => {
+    setResetSnapshot({
+      ideas,
+      links,
+      selectedIdeaId,
+    });
     setIdeas(initialIdeas);
     setLinks(initialLinks);
     setSelectedIdeaId(initialIdeas[0].id);
     setSearchQuery("");
+    setIsResetDialogOpen(false);
+  };
+
+  const undoReset = () => {
+    if (!resetSnapshot) {
+      return;
+    }
+
+    setIdeas(resetSnapshot.ideas);
+    setLinks(resetSnapshot.links);
+    setSelectedIdeaId(resetSnapshot.selectedIdeaId);
+    setResetSnapshot(null);
   };
 
   const deleteSelectedIdea = () => {
@@ -397,7 +421,7 @@ function IdeaBoard() {
         <button className="icon-button" type="button" onClick={arrangeBoard} title="整理">
           <AlignCenter aria-hidden="true" size={20} />
         </button>
-        <button className="icon-button" type="button" onClick={resetBoard} title="リセット">
+        <button className="icon-button" type="button" onClick={resetBoard} title="リセットする">
           <RefreshCw aria-hidden="true" size={19} />
         </button>
       </aside>
@@ -540,6 +564,37 @@ function IdeaBoard() {
           <p className="empty-state">カードを選択してください。</p>
         )}
       </aside>
+
+      {resetSnapshot ? (
+        <div className="undo-toast" role="status">
+          <span>ボードをリセットしました</span>
+          <button type="button" onClick={undoReset}>
+            元に戻す
+          </button>
+        </div>
+      ) : null}
+
+      {isResetDialogOpen ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="reset-dialog-title">
+            <div className="confirm-dialog-icon">
+              <AlertTriangle aria-hidden="true" size={22} />
+            </div>
+            <div className="confirm-dialog-copy">
+              <h2 id="reset-dialog-title">ボードをリセットしますか？</h2>
+              <p>現在のカードと関連線は空のカード1枚に戻ります。リセット直後なら元に戻せます。</p>
+            </div>
+            <div className="confirm-dialog-actions">
+              <button className="secondary-button" type="button" onClick={() => setIsResetDialogOpen(false)}>
+                キャンセル
+              </button>
+              <button className="danger-button compact" type="button" onClick={confirmResetBoard}>
+                リセットする
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }
